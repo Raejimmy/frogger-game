@@ -23,7 +23,7 @@ const frog = {
 // Obstacles (cars)
 let cars = [];
 const lanes = [1, 2, 3, 4, 5, 6]; // Lane positions
-const speeds = [-2, 3, -4, 2, -3, 4]; // Speed for each lane (negative = left, positive = right)
+const speeds = [-1, 1.5, -2, 1, -1.5, 2]; // Speed for each lane (negative = left, positive = right)
 
 // Initialize cars
 function initCars() {
