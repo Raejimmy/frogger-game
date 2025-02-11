@@ -24,6 +24,7 @@ const frog = {
 let cars = [];
 const lanes = [1, 2, 3, 4, 5, 6]; // Lane positions
 const speeds = [-1, 1.5, -2, 1, -1.5, 2]; // Speed for each lane (negative = left, positive = right)
+const carColors = ['#FF4444', '#4444FF', '#44FF44', '#FFFF44', '#FF44FF', '#44FFFF']; // Colors for each lane
 
 // Initialize cars
 function initCars() {
@@ -36,7 +37,8 @@ function initCars() {
                 y: lane * GRID_SIZE,
                 width: CAR_WIDTH,
                 height: CAR_HEIGHT,
-                speed: speeds[index]
+                speed: speeds[index],
+                color: carColors[index]
             });
         }
     });
@@ -49,7 +51,7 @@ function drawFrog() {
 }
 
 function drawCar(car) {
-    ctx.fillStyle = '#ff4444';
+    ctx.fillStyle = car.color;
     ctx.fillRect(car.x, car.y, car.width, car.height);
 }
 
