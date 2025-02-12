@@ -133,6 +133,56 @@ function playWinSound() {
 // Game state
 let score = 0;
 let gameOver = false;
+let fireworks = [];
+
+// Firework particle class
+class Firework {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.particles = [];
+        this.createParticles();
+    }
+
+    createParticles() {
+        for (let i = 0; i < 30; i++) {
+            const angle = (Math.PI * 2 * i) / 30;
+            const speed = 2 + Math.random() * 2;
+            this.particles.push({
+                x: this.x,
+                y: this.y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                alpha: 1,
+                color: `hsl(${Math.random() * 360}, 50%, 50%)`
+            });
+        }
+    }
+
+    update() {
+        for (let particle of this.particles) {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.vy += 0.05; // gravity
+            particle.alpha -= 0.02;
+        }
+        return this.particles[0].alpha > 0;
+    }
+
+    draw(ctx) {
+        for (let particle of this.particles) {
+            if (particle.alpha > 0) {
+                ctx.save();
+                ctx.globalAlpha = particle.alpha;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+    }
+}
 
 // Player
 const frog = {
@@ -417,6 +467,15 @@ function gameLoop() {
     updateVehicles();
     vehicles.forEach(drawVehicle);
     drawFrog();
+    
+    // Update and draw fireworks
+    fireworks = fireworks.filter(firework => {
+        const isAlive = firework.update();
+        if (isAlive) {
+            firework.draw(ctx);
+        }
+        return isAlive;
+    });
 
     // Check win/lose conditions
     if (checkGameOver()) {
@@ -429,6 +488,11 @@ function gameLoop() {
         score += 100;
         scoreElement.textContent = score;
         playWinSound();
+        // Add fireworks at random positions near the top
+        for (let i = 0; i < 3; i++) {
+            const x = Math.random() * canvas.width;
+            fireworks.push(new Firework(x, GRID_SIZE));
+        }
         resetFrog();
     }
 
@@ -445,6 +509,7 @@ function resetGame() {
     score = 0;
     scoreElement.textContent = score;
     gameOver = false;
+    fireworks = []; // Clear any remaining fireworks
     resetFrog();
     initVehicles();
     gameLoop();
@@ -452,6 +517,7 @@ function resetGame() {
 
 // Event listeners
 document.addEventListener('keydown', (e) => {
+    console.log('Key pressed:', e.code); // Debug log
     if (gameOver) return;
     
     // Initialize audio on first interaction
@@ -460,23 +526,31 @@ document.addEventListener('keydown', (e) => {
     const STEP = GRID_SIZE;
     
     if (!frog.isJumping) {
-        switch(e.key) {
+        switch(e.code) {
             case 'ArrowUp':
+            case 'KeyW':
+                console.log('Moving up'); // Debug log
                 if (frog.y > 0) {
                     startJump(frog.x, frog.y - STEP);
                 }
                 break;
             case 'ArrowDown':
+            case 'KeyS':
+                console.log('Moving down'); // Debug log
                 if (frog.y < canvas.height - FROG_SIZE) {
                     startJump(frog.x, frog.y + STEP);
                 }
                 break;
             case 'ArrowLeft':
+            case 'KeyA':
+                console.log('Moving left'); // Debug log
                 if (frog.x > 0) {
                     startJump(frog.x - STEP, frog.y);
                 }
                 break;
             case 'ArrowRight':
+            case 'KeyD':
+                console.log('Moving right'); // Debug log
                 if (frog.x < canvas.width - FROG_SIZE) {
                     startJump(frog.x + STEP, frog.y);
                 }
