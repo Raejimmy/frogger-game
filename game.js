@@ -1,6 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
+const highScoreElement = document.getElementById('highScore');
 
 // Game constants
 const GRID_SIZE = 50;
@@ -11,6 +12,15 @@ const VEHICLE_HEIGHT = 30;
 // Audio Context and Background Music
 let audioContext = null;
 let bgMusicPlaying = false;
+
+// Game state
+let score = 0;
+let highScore = parseInt(localStorage.getItem('froggerHighScore')) || 0;
+let gameOver = false;
+let fireworks = [];
+
+// Initialize high score display
+highScoreElement.textContent = highScore;
 
 function initAudio() {
     if (audioContext) return;
@@ -129,11 +139,6 @@ function playWinSound() {
     oscillator.start();
     oscillator.stop(audioContext.currentTime + 0.2);
 }
-
-// Game state
-let score = 0;
-let gameOver = false;
-let fireworks = [];
 
 // Firework particle class
 class Firework {
@@ -343,8 +348,8 @@ function drawVehicle(vehicle) {
     // Tires with detail
     ctx.fillStyle = '#000000';
     // Draw tires with circular shape
-    for (let i = 0; i < 4; i++) {
-        const tireX = x + width * (0.2 + i * 0.2);
+    for (let i = 0; i < 2; i++) {
+        const tireX = x + width * (0.25 + i * 0.5); // Adjusted spacing for 2 tires
         ctx.beginPath();
         ctx.arc(tireX, y + height - 2, 3, 0, Math.PI * 2);
         ctx.fill();
@@ -487,6 +492,14 @@ function gameLoop() {
     } else if (checkWin()) {
         score += 100;
         scoreElement.textContent = score;
+        
+        // Update high score if current score is higher
+        if (score > highScore) {
+            highScore = score;
+            highScoreElement.textContent = highScore;
+            localStorage.setItem('froggerHighScore', highScore);
+        }
+        
         playWinSound();
         // Add fireworks at random positions near the top
         for (let i = 0; i < 3; i++) {
@@ -508,6 +521,7 @@ function resetFrog() {
 function resetGame() {
     score = 0;
     scoreElement.textContent = score;
+    highScoreElement.textContent = highScore;
     gameOver = false;
     fireworks = []; // Clear any remaining fireworks
     resetFrog();
