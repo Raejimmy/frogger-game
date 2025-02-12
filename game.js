@@ -207,16 +207,20 @@ const JUMP_DURATION = 15; // frames the jump animation takes
 
 // Obstacles (vehicles)
 let vehicles = [];
-const lanes = [1, 2, 3, 4, 5, 6]; // Lane positions
-const speeds = [-0.5, 0.75, -1, 0.5, -0.75, 1]; // Speed for each lane (negative = left, positive = right)
-const vehicleTypes = ['car', 'car', 'car', 'car', 'car', 'car']; // All cars
-const vehicleColors = ['#FF4444', '#4444FF', '#44FF44', '#FFFF44', '#FF44FF', '#44FFFF']; // Colors for each lane
+const lanes = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]; // Lane positions
+const speeds = [0.3, -0.25, 0.15, -0.3, 0.25, 0.3, -0.25, 0.2, -0.3, 0.25, 0.2, -0.3, 0.25, -0.2, 0.3]; // All speeds reduced by half
+const vehicleTypes = Array(15).fill('car'); // All vehicles are cars now
+const vehicleColors = [
+    '#4444FF', '#44FF44', '#FFFF44', '#FF44FF', '#44FFFF', 
+    '#FF8844', '#44FF88', '#8844FF', '#FF6B6B', '#4CAF50',
+    '#9C27B0', '#2196F3', '#FF5722', '#795548', '#607D8B'
+]; // Colors for each lane
 
 // Initialize vehicles
 function initVehicles() {
     vehicles = [];
     lanes.forEach((lane, index) => {
-        const numVehicles = Math.floor(Math.random() * 2) + 3; // 3-4 vehicles per lane
+        const numVehicles = Math.floor(Math.random() * 2) + 4; // 4-5 vehicles per lane
         for (let i = 0; i < numVehicles; i++) {
             vehicles.push({
                 x: Math.random() * canvas.width,
@@ -229,6 +233,8 @@ function initVehicles() {
             });
         }
     });
+    // Filter out any vehicles in the bottom lane
+    vehicles = vehicles.filter(vehicle => vehicle.y < canvas.height - GRID_SIZE);
 }
 
 // Draw functions
@@ -313,6 +319,10 @@ function drawFrog() {
 }
 
 function drawVehicle(vehicle) {
+    drawCar(vehicle);
+}
+
+function drawCar(vehicle) {
     const x = vehicle.x;
     const y = vehicle.y;
     const width = vehicle.width;
@@ -426,6 +436,7 @@ function lightenColor(color, percent) {
 }
 
 function drawSafeZones() {
+    // Safe zones
     ctx.fillStyle = '#666';
     ctx.fillRect(0, 0, canvas.width, GRID_SIZE); // Top safe zone
     ctx.fillRect(0, canvas.height - GRID_SIZE, canvas.width, GRID_SIZE); // Bottom safe zone
@@ -433,6 +444,7 @@ function drawSafeZones() {
 
 // Game logic
 function updateVehicles() {
+    vehicles = vehicles.filter(vehicle => vehicle.y < canvas.height - GRID_SIZE);
     vehicles.forEach(vehicle => {
         vehicle.x += vehicle.speed;
         
@@ -457,7 +469,7 @@ function checkGameOver() {
 }
 
 function checkWin() {
-    return frog.y <= GRID_SIZE;
+    return frog.y <= GRID_SIZE; // Win only when reaching the top
 }
 
 // Main game loop
