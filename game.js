@@ -150,16 +150,27 @@ class Firework {
     }
 
     createParticles() {
-        for (let i = 0; i < 30; i++) {
-            const angle = (Math.PI * 2 * i) / 30;
-            const speed = 2 + Math.random() * 2;
+        const numParticles = 40 + Math.floor(Math.random() * 20); // 40-60 particles
+        const baseHue = Math.random() * 360; // Base color for this firework
+        
+        for (let i = 0; i < numParticles; i++) {
+            const angle = (Math.PI * 2 * i) / numParticles;
+            const speed = 3 + Math.random() * 3; // Faster particles
+            const size = 1 + Math.random() * 3; // Variable sizes
+            
+            // Create a color variation around the base hue
+            const hue = (baseHue + Math.random() * 30 - 15) % 360;
+            const saturation = 70 + Math.random() * 30;
+            const lightness = 50 + Math.random() * 20;
+            
             this.particles.push({
                 x: this.x,
                 y: this.y,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
                 alpha: 1,
-                color: `hsl(${Math.random() * 360}, 50%, 50%)`
+                size: size,
+                color: `hsl(${hue}, ${saturation}%, ${lightness}%)`
             });
         }
     }
@@ -181,7 +192,12 @@ class Firework {
                 ctx.globalAlpha = particle.alpha;
                 ctx.fillStyle = particle.color;
                 ctx.beginPath();
-                ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+                ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Add glow effect
+                ctx.shadowBlur = particle.size * 2;
+                ctx.shadowColor = particle.color;
                 ctx.fill();
                 ctx.restore();
             }
@@ -207,8 +223,9 @@ const JUMP_DURATION = 15; // frames the jump animation takes
 
 // Obstacles (vehicles)
 let vehicles = [];
+let originalSpeeds = [0.15, -0.12, 0.1, -0.15, 0.12, 0.15, -0.12, 0.1, -0.15, 0.12, 0.1, -0.15, 0.12, -0.1, 0.15]; // Reduced base speeds
+let speeds = [...originalSpeeds]; // Copy of speeds that we'll use
 const lanes = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]; // Lane positions
-const speeds = [0.3, -0.25, 0.15, -0.3, 0.25, 0.3, -0.25, 0.2, -0.3, 0.25, 0.2, -0.3, 0.25, -0.2, 0.3]; // All speeds reduced by half
 const vehicleTypes = Array(15).fill('car'); // All vehicles are cars now
 const vehicleColors = [
     '#4444FF', '#44FF44', '#FFFF44', '#FF44FF', '#44FFFF', 
@@ -446,6 +463,11 @@ function drawSafeZones() {
 function updateVehicles() {
     vehicles = vehicles.filter(vehicle => vehicle.y < canvas.height - GRID_SIZE);
     vehicles.forEach(vehicle => {
+        // Use original speed directly from the speeds array
+        const laneIndex = lanes.indexOf(Math.floor(vehicle.y / GRID_SIZE));
+        if (laneIndex !== -1) {
+            vehicle.speed = speeds[laneIndex];
+        }
         vehicle.x += vehicle.speed;
         
         // Wrap vehicles around screen
@@ -513,10 +535,11 @@ function gameLoop() {
         }
         
         playWinSound();
-        // Add fireworks at random positions near the top
-        for (let i = 0; i < 3; i++) {
-            const x = Math.random() * canvas.width;
-            fireworks.push(new Firework(x, GRID_SIZE));
+        // Add more fireworks spread across the screen
+        for (let i = 0; i < 8; i++) {
+            const x = (canvas.width / 8) * i + Math.random() * (canvas.width / 8);
+            const y = GRID_SIZE + Math.random() * (canvas.height / 3);
+            fireworks.push(new Firework(x, y));
         }
         resetFrog();
     }
@@ -536,6 +559,7 @@ function resetGame() {
     highScoreElement.textContent = highScore;
     gameOver = false;
     fireworks = []; // Clear any remaining fireworks
+    speeds = [...originalSpeeds]; // Reset speeds to original values
     resetFrog();
     initVehicles();
     gameLoop();
